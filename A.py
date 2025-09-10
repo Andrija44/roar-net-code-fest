@@ -1,5 +1,3 @@
-from tabulate import tabulate
-
 class Problem:
     def __init__(self, peoNum, connNum, fees, connections):
         self.peoNum = peoNum
@@ -10,7 +8,7 @@ class Problem:
         self.ub = 0
 
     def __str__(self):
-        return f"People: {self.peoNum}, Connections: {self.connNum}\nFees: {self.fees}\n{tabulate(self.connections)}"
+        return f"People: {self.peoNum}, Connections: {self.connNum}\nFees: {self.fees}\nConnections: {self.connections}"
 
     def empty_solution(self):
         return Solution(self, [], 0, self.ub)
@@ -27,7 +25,6 @@ class Problem:
             conn.append(list(map(int, line.split(" "))))
 
         return cls(people, conns, fees, conn)
-        
 
 class Solution:
     def __init__(self, problem, selected, k, ub):
@@ -49,7 +46,7 @@ class Solution:
         return -self.ub
     
     def to_textio(self, f) -> None:
-        f.write(f"{self.selected}\n")
+        f.write(' '.join(str(elem) for elem in self.selected))
 
 class Neighbourhood:
     def __init__(self, problem):
@@ -62,7 +59,6 @@ class Neighbourhood:
                 elems = list(set(solution.selected) & set(elems))
             for elem in elems:
                 yield Move(self, elem)
-
 
 class Move:
     def __init__(self, neighbourhood, v):
@@ -98,10 +94,6 @@ if __name__ == "__main__":
     else:
         problem = Problem.from_textio(sys.stdin)
 
-    # print(f"-- Problem --\n{problem}")
-
     solution = alg.greedy_construction(problem)
 
     solution.to_textio(sys.stdout)
-
-    # print(f"-- Solution --\n{solution}")
