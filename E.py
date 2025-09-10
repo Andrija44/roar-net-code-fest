@@ -51,8 +51,8 @@ class Solution:
         for elem in range(1, self.problem.villageNum):
             if elem in self.visited:
                 continue
-            # TODO dodaj ekstra udaljenost
-            if (self.problem.candleLenght[elem] - self.distance * self.problem.burnRate[elem]) > 0:
+            dist = abs(self.problem.cords[self.curr][0] - self.problem.cords[elem][0]) + abs(self.problem.cords[self.curr][1] - self.problem.cords[elem][1])
+            if (self.problem.candleLenght[elem - 1] - (self.distance + dist) * self.problem.burnRate[elem - 1]) > 0:
                 return None
         return self.lb
 
@@ -60,7 +60,7 @@ class Solution:
         return self.lb
     
     def to_textio(self, f) -> None: # output the current solution
-        f.write(' '.join(str(elem) for elem in self.visited))
+        f.write('\n'.join(str(elem) for elem in self.visited))
 
 class Neighbourhood:
     def __init__(self, problem):
@@ -70,6 +70,9 @@ class Neighbourhood:
         if len(solution.visited) < (self.problem.villageNum - 1):
             for i in range(1, self.problem.villageNum):
                 if i == solution.curr or i in solution.visited:
+                    continue
+                dist = abs(self.problem.cords[solution.curr][0] - self.problem.cords[i][0]) + abs(self.problem.cords[solution.curr][1] - self.problem.cords[i][1])
+                if (self.problem.candleLenght[i - 1] - (solution.distance + dist) * self.problem.burnRate[i - 1]) <= 0:
                     continue
                 yield Move(self, i)
 
@@ -97,7 +100,7 @@ class Move:
         solution.distance += abs(solution.problem.cords[solution.curr][0] - solution.problem.cords[self.village][0]) + abs(solution.problem.cords[solution.curr][1] - solution.problem.cords[self.village][1])
         solution.curr = self.village
         solution.lb += self.lb_incr
-        print(f"In village {self.village}, lb_incr: {self.lb_incr} and solution\n{solution}")
+        # print(f"In village {self.village}, lb_incr: {self.lb_incr} and solution\n{solution}")
         return solution
 
 # default api call
@@ -111,9 +114,9 @@ if __name__ == "__main__":
     else:
         problem = Problem.from_textio(sys.stdin)
 
-    print(f"-- Problem --\n{problem}")
+    # print(f"-- Problem --\n{problem}")
 
     solution = alg.greedy_construction(problem)
 
-    # solution.to_textio(sys.stdout)
-    print(f"-- Solution --\n{solution}")
+    solution.to_textio(sys.stdout)
+    # print(f"-- Solution --\n{solution}")
