@@ -5,14 +5,14 @@ class Problem:
         self.fees = fees # price of vertex
         self.connections = connections # list of connections (edges)
 
-        self.ub = 0 # starting upper bound
+        self.lb = 0 # starting lower bound
 
     def __str__(self):
         return f"People: {self.peoNum}, Connections: {self.connNum}\nFees: {self.fees}\nConnections: {self.connections}"
 
     # construct empty solution
     def empty_solution(self):
-        return Solution(self, [], 0, self.ub)
+        return Solution(self, [], 0, self.lb)
 
     # construct neigbourhood (next available moves)
     def construction_neighbourhood(self):
@@ -29,23 +29,23 @@ class Problem:
         return cls(people, conns, fees, conn)
 
 class Solution:
-    def __init__(self, problem, selected, k, ub):
+    def __init__(self, problem, selected, k, lb):
         self.problem = problem # instance of Problem class
         self.selected = selected # current solution
         self.k = k # current connection (index in the connections list)
-        self.ub = ub # upper bound of the current solution
+        self.lb = lb # lower bound of the current solution
 
     def __str__(self):
-        return f"\tSelected: {self.selected}\n\tUB: {self.ub}"
+        return f"\tSelected: {self.selected}\n\tLB: {self.lb}"
 
     def objective_value(self): # value of the best solution
         for conns in self.problem.connections:
             if any(elem in self.selected for elem in conns):
-                return -self.ub
+                return self.lb
         return None
 
     def lower_bound(self):
-        return -self.ub
+        return self.lb
     
     def to_textio(self, f) -> None: # output the current solution
         f.write(' '.join(str(elem) for elem in self.selected))
@@ -66,23 +66,20 @@ class Move:
     def __init__(self, neighbourhood, v):
         self.neighbourhood = neighbourhood # instance of Neighbourhood class
         self.v = v # vertex
-        self.ub_incr = None # upper bound increment for the current move
+        self.lb_incr = None # lower bound increment for the current move
     
     def __str__(self):
         return f"Select node {self.v}"
     
-    def _upper_bound_increment(self, solution): # calculate by how much will teh upper bound be increased if the current move is applied    
-        if self.ub_incr is None:
-            self.ub_incr = 1 / solution.problem.fees[self.v - 1] # (we are working on maximization)
-        return self.ub_incr
-    
     def lower_bound_increment(self, solution):
-        return -self._upper_bound_increment(solution)
+        if self.lb_incr is None:
+            self.lb_incr = solution.problem.fees[self.v - 1] # (we are working on maximization)
+        return self.lb_incr
     
     def apply_move(self, solution):
         solution.k += 1 # increase the counter to the next connection
         if self.v not in solution.selected: # check if the current vertex is in the list selected, if not add it
-            solution.ub += self._upper_bound_increment(solution)
+            solution.lb += self.lower_bound_increment(solution)
             solution.selected.append(self.v)
         return solution
 
